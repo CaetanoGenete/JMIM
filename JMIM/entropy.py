@@ -19,6 +19,8 @@ def entropy(pmf) -> float:
 
 
 def _invert_axes(axes, ndim) -> tuple:
+    """Computes the set minus operation (0,...,ndim-1)\axes"""
+
     #Mod ensures axes are in the interval [0, ndim) (Also allows for negative indices).
     return tuple(np.setdiff1d(np.arange(ndim), np.mod(axes, ndim)))
 
@@ -66,7 +68,7 @@ def generate_pmf(data, labels=None) -> np.ndarray:
 
     Returns:
         np.ndarray: A numpy array with N-dimensions (Where N is the number of features), with each entry being
-        the joint pmf of the particular labels appearing simultaneously. 
+        the joint pmf of the particular labels appearing simultaneously.
     """
 
     assert np.ndim(data) == 2, "data must be a two dimensional numpy array"

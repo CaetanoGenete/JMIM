@@ -22,7 +22,7 @@ def _random_dataset(request):
     assert np.abs(np.sum(pmf) - 1.) < 1e-10, "pmf must sum to 1!"
     assert np.alltrue(pmf >= 0), "all values of pmf must be non-negative!"
 
-    return [pmf, data]
+    return pmf, data
 
 
 def _reduce_joint_pmf(joint_pmf, axes):
@@ -79,11 +79,13 @@ def _JMIM_3(joint_pmf, k):
 def test_JMIM_1(_random_dataset, k_frac):
     """Compare results of _JMIM_2 implementation with JMIM"""
 
-    ndim = _random_dataset[0].ndim
+    pmf, data = _random_dataset
+
+    ndim = np.ndim(data)
     k = min(max(1, int(k_frac * ndim)), ndim-1)
 
-    result1 = JMIM(_random_dataset[1], k)
-    result2 = _JMIM_2(_random_dataset[0], k)
+    result1 = JMIM(data, k)
+    result2 = _JMIM_2(pmf, k)
 
     assert result1 == result2
     assert len(np.unique(result1)) == len(result1)
@@ -93,11 +95,13 @@ def test_JMIM_1(_random_dataset, k_frac):
 def test_JMIM_2(_random_dataset, k_frac):
     """Compare results of _JMIM_3 implementation with JMIM"""
 
-    ndim = _random_dataset[0].ndim
+    pmf, data = _random_dataset
+
+    ndim = np.ndim(data)
     k = min(max(1, int(k_frac * ndim)), ndim-1)
 
-    result1 = JMIM(_random_dataset[1], k)
-    result2 = _JMIM_3(_random_dataset[0], k)
+    result1 = JMIM(data, k)
+    result2 = _JMIM_3(pmf, k)
 
     assert result1 == result2
     assert len(np.unique(result1)) == len(result1)

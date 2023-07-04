@@ -21,7 +21,7 @@ def _random_dataset(request):
     assert np.abs(np.sum(pmf) - 1.) < 1e-10, "pmf must sum to 1!"
     assert np.alltrue(pmf >= 0), "all values of pmf must be non-negative!"
 
-    return [pmf, Y_axes]
+    return pmf, Y_axes
 
 
 def _conditional_entropy_2(joint_pmf, Y_axes=(-1,)):
@@ -40,8 +40,12 @@ def _conditional_entropy_2(joint_pmf, Y_axes=(-1,)):
 
 
 def test_entropy_compare(_random_dataset):
-    e1 = conditional_entropy(_random_dataset[0], _random_dataset[1])
-    e2 = _conditional_entropy_2(_random_dataset[0], _random_dataset[1])
+    """Compare result of the explicit summation of conditional entropy"""
+
+    pmf, Y_axes = _random_dataset
+
+    e1 = conditional_entropy(pmf, Y_axes)
+    e2 = _conditional_entropy_2(pmf, Y_axes)
 
     assert np.abs(e1 - e2) < 1e-8
 
@@ -62,10 +66,12 @@ def _MI_2(joint_pmf, Y_axes=(-1,)):
 
 
 def test_MI_compare(_random_dataset):
-    """Compare result of the explicit summation of _MI_2 with MI"""
+    """Compare result of the explicit summation of MI"""
 
-    mi1 = MI(_random_dataset[0], _random_dataset[1])
-    mi2 = _MI_2(_random_dataset[0], _random_dataset[1])
+    pmf, Y_axes = _random_dataset
+
+    mi1 = MI(pmf, Y_axes)
+    mi2 = _MI_2(pmf, Y_axes)
 
     assert mi1 >= 0
     assert np.abs(mi1 - mi2) < 1e-8
@@ -74,11 +80,11 @@ def test_MI_compare(_random_dataset):
 def test_MI_symmetric(_random_dataset):
     """Test I(X;Y) == I(Y;X)"""
 
-    Y_axes = _random_dataset[1]
-    X_axes = _invert_axes(Y_axes, _random_dataset[0].ndim)
+    pmf, Y_axes = _random_dataset
+    X_axes = _invert_axes(Y_axes, np.ndim(pmf))
 
-    mi1 = MI(_random_dataset[0], Y_axes)
-    mi2 = MI(_random_dataset[0], X_axes)
+    mi1 = MI(pmf, Y_axes)
+    mi2 = MI(pmf, X_axes)
 
     assert mi1 >= 0
     assert np.abs(mi1 - mi2) < 1e-8
@@ -87,11 +93,10 @@ def test_MI_symmetric(_random_dataset):
 def test_MI_indentity1(_random_dataset):
     """Test I(X;Y) = H(X) - H(X|Y)"""
 
-    Y_axes = _random_dataset[1]
-    #X_axes = _invert_axes(Y_axes, _random_dataset[0].ndim)
+    pmf, Y_axes = _random_dataset
 
-    mi1 = MI(_random_dataset[0], Y_axes)
-    mi2 = entropy(np.sum(_random_dataset[0], axis=Y_axes)) - conditional_entropy(_random_dataset[0], Y_axes)
+    mi1 = MI(pmf, Y_axes)
+    mi2 = entropy(np.sum(pmf, axis=Y_axes)) - conditional_entropy(pmf, Y_axes)
 
     assert mi1 >= 0
     assert np.abs(mi1 - mi2) < 1e-8
@@ -100,13 +105,13 @@ def test_MI_indentity1(_random_dataset):
 def test_MI_indentity2(_random_dataset):
     """Test I(X;Y) = H(Y) - H(X|Y)"""
 
-    Y_axes = _random_dataset[1]
-    X_axes = _invert_axes(Y_axes, np.ndim(_random_dataset[0]))
+    pmf, Y_axes = _random_dataset
+    X_axes = _invert_axes(Y_axes, np.ndim(pmf))
 
     assert X_axes != Y_axes
 
-    mi1 = MI(_random_dataset[0], Y_axes)
-    mi2 = entropy(np.sum(_random_dataset[0], axis=X_axes)) - conditional_entropy(_random_dataset[0], X_axes)
+    mi1 = MI(pmf, Y_axes)
+    mi2 = entropy(np.sum(pmf, axis=X_axes)) - conditional_entropy(pmf, X_axes)
 
     assert mi1 >= 0
     assert np.abs(mi1 - mi2) < 1e-8
@@ -115,15 +120,15 @@ def test_MI_indentity2(_random_dataset):
 def test_MI_indentity3(_random_dataset):
     """Test I(X;Y) = H(Y) +  H(X) - H(X, Y)"""
 
-    Y_axes = _random_dataset[1]
-    X_axes = _invert_axes(Y_axes, np.ndim(_random_dataset[0]))
+    pmf, Y_axes = _random_dataset
+    X_axes = _invert_axes(Y_axes, np.ndim(pmf))
 
     assert X_axes != Y_axes
 
-    mi1 = MI(_random_dataset[0], Y_axes)
-    mi2 = entropy(np.sum(_random_dataset[0], axis=X_axes)) +\
-          entropy(np.sum(_random_dataset[0], axis=Y_axes)) -\
-          entropy(_random_dataset[0])
+    mi1 = MI(pmf, Y_axes)
+    mi2 = entropy(np.sum(pmf, axis=X_axes)) +\
+          entropy(np.sum(pmf, axis=Y_axes)) -\
+          entropy(pmf)
 
     assert mi1 >= 0
     assert np.abs(mi1 - mi2) < 1e-8
@@ -132,15 +137,15 @@ def test_MI_indentity3(_random_dataset):
 def test_MI_indentity4(_random_dataset):
     """Test I(X;Y) = H(X,Y) -  H(X|Y) - H(Y|X)"""
 
-    Y_axes = _random_dataset[1]
-    X_axes = _invert_axes(Y_axes, np.ndim(_random_dataset[0]))
+    pmf, Y_axes = _random_dataset
+    X_axes = _invert_axes(Y_axes, np.ndim(pmf))
 
     assert X_axes != Y_axes
 
-    mi1 = MI(_random_dataset[0], Y_axes)
-    mi2 = entropy(_random_dataset[0]) -\
-          conditional_entropy(_random_dataset[0], X_axes) -\
-          conditional_entropy(_random_dataset[0], Y_axes)
+    mi1 = MI(pmf, Y_axes)
+    mi2 = entropy(pmf) -\
+          conditional_entropy(pmf, X_axes) -\
+          conditional_entropy(pmf, Y_axes)
 
     assert mi1 >= 0
     assert np.abs(mi1 - mi2) < 1e-8
