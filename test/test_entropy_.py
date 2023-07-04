@@ -15,8 +15,7 @@ def _random_dataset(request):
     data = np.random.randint(0, 10, size=(rows, nfeatures))
     labelled_data, labels = label_data(data)
 
-    bins = tuple(len(label) for label in labels)
-    pmf = generate_pmf(labelled_data, bins)
+    pmf = generate_pmf(labelled_data, labels)
 
     assert np.abs(np.sum(pmf) - 1.) < 1e-10, "pmf must sum to 1!"
     assert np.alltrue(pmf >= 0), "all values of pmf must be non-negative!"
@@ -25,9 +24,9 @@ def _random_dataset(request):
 
 
 def _conditional_entropy_2(joint_pmf, Y_axes=(-1,)):
-    """For testing purposes"""
+    """For testing purposes. Identical computation to JMIM.entropy.conditional_entropy"""
 
-    ndim = joint_pmf.ndim
+    ndim = np.ndim(joint_pmf)
 
     #Ensure axes are in the interval [0, ndim) (Also allows for negative indices).
     Y_axes = np.mod(Y_axes, ndim)
@@ -47,7 +46,9 @@ def test_entropy_compare(_random_dataset):
 
 
 def _MI_2(joint_pmf, Y_axes=(-1,)):
-    ndim = joint_pmf.ndim
+    """For testing purposes. Identical computation to JMIM.entropy.MI"""
+
+    ndim = np.ndim(joint_pmf)
 
     #Ensure axes are in the interval [0, ndim) (Also allows for negative indices).
     Y_axes = tuple(np.mod(Y_axes, ndim))
@@ -60,6 +61,8 @@ def _MI_2(joint_pmf, Y_axes=(-1,)):
 
 
 def test_MI_compare(_random_dataset):
+    """Compare result of the explicit summation of _MI_2 with MI"""
+
     mi1 = MI(_random_dataset[0], _random_dataset[1])
     mi2 = _MI_2(_random_dataset[0], _random_dataset[1])
 
@@ -97,7 +100,7 @@ def test_MI_indentity2(_random_dataset):
     """Test I(X;Y) = H(Y) - H(X|Y)"""
 
     Y_axes = _random_dataset[1]
-    X_axes = _invert_axes(Y_axes, _random_dataset[0].ndim)
+    X_axes = _invert_axes(Y_axes, np.ndim(_random_dataset[0]))
 
     assert X_axes != Y_axes
 
@@ -112,7 +115,7 @@ def test_MI_indentity3(_random_dataset):
     """Test I(X;Y) = H(Y) +  H(X) - H(X, Y)"""
 
     Y_axes = _random_dataset[1]
-    X_axes = _invert_axes(Y_axes, _random_dataset[0].ndim)
+    X_axes = _invert_axes(Y_axes, np.ndim(_random_dataset[0]))
 
     assert X_axes != Y_axes
 
@@ -129,7 +132,7 @@ def test_MI_indentity4(_random_dataset):
     """Test I(X;Y) = H(X,Y) -  H(X|Y) - H(Y|X)"""
 
     Y_axes = _random_dataset[1]
-    X_axes = _invert_axes(Y_axes, _random_dataset[0].ndim)
+    X_axes = _invert_axes(Y_axes, np.ndim(_random_dataset[0]))
 
     assert X_axes != Y_axes
 

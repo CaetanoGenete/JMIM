@@ -16,8 +16,7 @@ def _random_dataset(request):
     data = np.random.randint(0, 10, size=(rows, nfeatures))
     labelled_data, labels = label_data(data)
 
-    bins = tuple(len(label) for label in labels)
-    pmf = generate_pmf(labelled_data, bins)
+    pmf = generate_pmf(labelled_data, labels)
 
     assert np.abs(np.sum(pmf) - 1.) < 1e-10, "pmf must sum to 1!"
     assert np.alltrue(pmf >= 0), "all values of pmf must be non-negative!"
@@ -33,8 +32,11 @@ def _reduce_joint_pmf(joint_pmf, axes):
 
 
 def _JMIM_2(joint_pmf, k):
+    """For testing purposes. Identical computation to JMIM.JMIM.JMIM"""
+
     assert k < joint_pmf.ndim, "Selecting too many features!"
 
+    # Omit last feature since this is C
     F = list(range(joint_pmf.ndim-1))
     S = []
 
@@ -49,6 +51,8 @@ def _JMIM_2(joint_pmf, k):
 
 
 def _JMIM_3(joint_pmf, k):
+    """For testing purposes. Identical computation to JMIM.JMIM.JMIM"""
+
     # Omit last feature since this is C
     F = list(range(joint_pmf.ndim-1))
     S = []
@@ -72,6 +76,8 @@ def _JMIM_3(joint_pmf, k):
 
 @pytest.mark.parametrize("k_frac", [0., 0.25, 0.5, 0.75])
 def test_JMIM_1(_random_dataset, k_frac):
+    """Compare results of _JMIM_2 implementation with JMIM"""
+
     ndim = _random_dataset[0].ndim
     k = min(max(1, int(k_frac * ndim)), ndim-1)
 
@@ -84,6 +90,8 @@ def test_JMIM_1(_random_dataset, k_frac):
 
 @pytest.mark.parametrize("k_frac", [0., 0.25, 0.5, 0.75])
 def test_JMIM_2(_random_dataset, k_frac):
+    """Compare results of _JMIM_3 implementation with JMIM"""
+
     ndim = _random_dataset[0].ndim
     k = min(max(1, int(k_frac * ndim)), ndim-1)
 

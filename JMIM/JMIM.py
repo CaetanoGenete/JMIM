@@ -3,24 +3,23 @@ import numpy as np
 from JMIM.entropy import MI, _invert_axes, label_data, generate_pmf
 
 
-def _JMI(data, labels, axes):
+def _JMI(data, labels, axes) -> float:
     """Helper function to compute I(f_1,...,f_{N-1};F_N) where axes=f_1,...,f_{N-1},F_N"""
 
-    bins = tuple(len(labels[i]) for i in axes)
-    return MI(generate_pmf(data, bins, axes=axes))
+    return MI(generate_pmf(data, [labels[i] for i in axes], axes=axes))
 
 
-def JMIM(data, k, labels=None, C=-1):
-    """Computes the JMIM
+def JMIM(data, k: int, labels=None, C=-1) -> list:
+    """Selects k most significant features, based on the JMIM algorithm.
 
     Args:
-        data (_type_): _description_
-        k (_type_): _description_
-        labels (_type_, optional): _description_. Defaults to None.
-        C (int, optional): _description_. Defaults to -1.
+        data (Any): A two dimensional array of data where the columns represent the features.
+        k (int): The number of features to select.
+        labels (Any, optional): The mapping from the integer labels in data to their true value. Defaults to None.
+        C (int, optional): The output feature. Defaults to -1.
 
     Returns:
-        _type_: _description_
+        list: The k most significant features in order of significance.
     """
 
     _, nfeatures = np.shape(data)
