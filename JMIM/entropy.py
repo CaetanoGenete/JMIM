@@ -56,33 +56,37 @@ def MI(joint_pmf, Y_axes=(-1,)):
 
 
 def label_data(data):
-    assert data.ndim == 2, "data must be a two dimensional numpy array"
+    assert data.ndim == 2, "data must be a two dimensional array"
 
     _, cols = data.shape
     # Map from label to value for each feature
+    labelled_data = np.zeros(data.shape, dtype=np.uint8)
     labels = []
     
     # Uniquely label the values of each feature (column) from 0,...
     for i in range(cols):
+        #Using 'set' instead of 'np.unique' to allow for non-numeric data-types
         value_to_label = {value:j for j, value in enumerate(set(data[:, i]))}
-        # Replace data with labels
-        data[:, i] = np.vectorize(lambda x: value_to_label[x])(data[:, i])
+        labelled_data[:, i] = np.vectorize(lambda x: value_to_label[x])(data[:, i])
 
         labels.append(list(value_to_label.keys()))
 
-    return labels
+    return labelled_data, labels
 
 
-def generate_pmf(data, bins = None, axes = None):
+def generate_pmf(data, bins=None, axes=None):
     assert data.ndim == 2, "data must be a two dimensional numpy array"
+    assert np.issubdtype(data.dtype, np.integer), "data must be a list of integral types, use label_data to convert"
 
     rows, cols = data.shape
 
+    # By default, calculate joint pmf for all features
     if axes is None:
         axes = tuple(range(cols))
 
+    # If no bins are specified, calculate them
     if bins is None:
-        bins = tuple(len(set(unique)) for unique in data[:, axes].T)
+        bins = tuple(len(set(column)) for column in data[:, axes].T)
     else:
         assert len(bins) == len(axes), "Size of bin counts tuple must equal number of axes"
 

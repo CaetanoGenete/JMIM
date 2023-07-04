@@ -1,48 +1,54 @@
 import numpy as np
 
-from JMIM.entropy import MI, _invert_axes
+from JMIM.entropy import MI, _invert_axes, label_data, generate_pmf
 
 
-def _reduce_joint_pmf(joint_pmf, axes):
-    """Computes the joint pmf for a smaller subset of features (axes). Features are relabelled to be
-    consecutive whilst preserving their order"""
+def _JMI(data, labels, axes):
+    """Helper function to compute I(f_1,...,f_{N-1};F_N) where axes=f_1,...,f_{N-1},F_N"""
 
-    return np.sum(joint_pmf, axis=_invert_axes(axes, joint_pmf.ndim))
-
-
-def JMIM(joint_pmf, k):
-    assert k < joint_pmf.ndim, "Selecting too many features!"
-
-    F = list(range(joint_pmf.ndim-1))
-    S = []
-
-    max_index = np.argmax([MI(_reduce_joint_pmf(joint_pmf, (fi, -1))) for fi in F])
-    S.append(F.pop(max_index))
-
-    for _ in range(1, k):
-        max_index = np.argmax([np.min([MI(_reduce_joint_pmf(joint_pmf, (fi, fs, -1))) for fs in S]) for fi in F])
-        S.append(F.pop(max_index))
-
-    return S
+    bins = tuple(len(labels[i]) for i in axes)
+    return MI(generate_pmf(data, bins, axes=axes))
 
 
-def _JMIM_2(joint_pmf, k):
-    # Omit last feature since this is C
-    F = list(range(joint_pmf.ndim-1))
+def JMIM(data, k, labels=None, C=-1):
+    """Computes the JMIM
+
+    Args:
+        data (_type_): _description_
+        k (_type_): _description_
+        labels (_type_, optional): _description_. Defaults to None.
+        C (int, optional): _description_. Defaults to -1.
+
+    Returns:
+        _type_: _description_
+    """
+
+    _, nfeatures = np.shape(data)
+    assert k < nfeatures, "k cannot be greater or equal to the number of features"
+
+    # If no labels are specified, assign labels to data
+    if(labels is None):
+        data, labels = label_data(data)
+    else:
+        assert nfeatures == len(labels), "Number of label sets doesn't match number of features"
+
+    # F initially contains every feature (except C)
+    F = list(_invert_axes((C,), nfeatures))
     S = []
 
     # Select the f_i with the greatest I(f_i;C)
-    max_index = np.argmax([MI(_reduce_joint_pmf(joint_pmf, (fi, -1))) for fi in F])
+    max_index = np.argmax([_JMI(data, labels, (fi, C)) for fi in F])
     S.append(F.pop(max_index))
 
-    mins = [np.inf for _ in F]
+    min_JMIs = [np.inf] * len(F)
+    # Every iteration, S grows by 1. Stop when |S|=k.
     for _ in range(1, k):
         # Recompute min(I(f_i,f_s;C)) now that there is a new feature in S
-        for i, min_val in enumerate(mins):
-            mins[i] = min(min_val, MI(_reduce_joint_pmf(joint_pmf, (F[i], S[-1], -1))))
+        for i, min_val in enumerate(min_JMIs):
+            min_JMIs[i] = min(min_val, _JMI(data, labels, (F[i], S[-1], C)))
 
-        max_index = np.argmax(mins)
+        max_index = np.argmax(min_JMIs)
         S.append(F.pop(max_index))
-        mins.pop(max_index)
+        min_JMIs.pop(max_index)
 
     return S

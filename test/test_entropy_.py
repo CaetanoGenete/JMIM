@@ -13,9 +13,13 @@ def _random_dataset(request):
     Y_axes = tuple(range(1, np.random.randint(2, nfeatures+1)))
 
     data = np.random.randint(0, 10, size=(rows, nfeatures))
-    label_data(data)
+    labelled_data, labels = label_data(data)
 
-    pmf = generate_pmf(data)
+    bins = tuple(len(label) for label in labels)
+    pmf = generate_pmf(labelled_data, bins)
+
+    assert np.abs(np.sum(pmf) - 1.) < 1e-10, "pmf must sum to 1!"
+    assert np.alltrue(pmf >= 0), "all values of pmf must be non-negative!"
 
     return [pmf, Y_axes]
 
