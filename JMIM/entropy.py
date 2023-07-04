@@ -55,36 +55,6 @@ def MI(joint_pmf, Y_axes=(-1,)) -> float:
     return entropy(np.sum(joint_pmf, axis=Y_axes)) - conditional_entropy(joint_pmf, Y_axes)
 
 
-def label_data(data) -> tuple:
-    """For each column in 'data', assigns a unique id to each value.
-
-    Args:
-        data (Any): A 2-dimensional array
-
-    Returns:
-        tuple: A numpy array with the same dimensions as 'data' of integer type, with every value in each
-        column uniquely labelled from 0 to N; and a map from these labels to their original values as a ragged
-        two-dimensional list.
-    """
-
-    assert np.ndim(data) == 2, "data must be a two dimensional array"
-
-    _, cols = data.shape
-    # Map from label to value for each feature
-    labelled_data = np.zeros(data.shape, dtype=np.uint8)
-    labels = []
-    
-    # Uniquely label the values of each feature (column) from 0,...
-    for i in range(cols):
-        #Using 'set' instead of 'np.unique' to allow for non-numeric data-types
-        value_to_label = {value:j for j, value in enumerate(set(data[:, i]))}
-        labelled_data[:, i] = np.vectorize(lambda x: value_to_label[x])(data[:, i])
-
-        labels.append(list(value_to_label.keys()))
-
-    return labelled_data, labels
-
-
 def generate_pmf(data, labels=None, axes=None) -> np.ndarray:
     """Computes the pmf of the features (columns) of 'data', which must be uniquely labelled (For example by
     applying the 'label_data' function).
@@ -101,7 +71,7 @@ def generate_pmf(data, labels=None, axes=None) -> np.ndarray:
     assert np.ndim(data) == 2, "data must be a two dimensional numpy array"
     assert np.issubdtype(data.dtype, np.integer), "data must be a list of integral types, use label_data to convert"
 
-    rows, cols = data.shape
+    rows, cols = np.shape(data)
 
     # By default, calculate joint pmf for all features
     if axes is None:

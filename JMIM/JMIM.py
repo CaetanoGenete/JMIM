@@ -1,6 +1,7 @@
 import numpy as np
 
-from JMIM.entropy import MI, _invert_axes, label_data, generate_pmf
+from JMIM.entropy import MI, _invert_axes, generate_pmf
+from JMIM.preprocessing import label_data
 
 
 def _JMI(data, labels, axes) -> float:

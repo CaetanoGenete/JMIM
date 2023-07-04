@@ -3,6 +3,7 @@ import pytest
 
 from JMIM.entropy import *
 from JMIM.entropy import _invert_axes
+from JMIM.preprocessing import label_data
 
 @pytest.fixture(scope="module", params=list(range(6)))
 def _random_dataset(request):
