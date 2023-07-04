@@ -4,14 +4,14 @@ from JMIM.entropy import MI, _invert_axes, generate_pmf
 from JMIM.preprocessing import label_data
 
 
-def _JMI(data, labels, axes) -> float:
+def _JMI(data, labels, features: tuple) -> float:
     """Helper function to compute I(f_1,...,f_{N-1};F_N) where axes=f_1,...,f_{N-1},F_N"""
 
-    return MI(generate_pmf(data, [labels[i] for i in axes], axes=axes))
+    return MI(generate_pmf(data[:, features], [labels[i] for i in features]))
 
 
 def JMIM(data, k: int, labels=None, C=-1) -> list:
-    """Selects k most significant features, based on the JMIM algorithm.
+    """Selects the k most significant features, based on the JMIM algorithm.
 
     Args:
         data (Any): A two dimensional array of data where the columns represent the features.

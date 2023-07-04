@@ -48,24 +48,25 @@ def MI(joint_pmf, Y_axes=(-1,)) -> float:
         Y_axes (tuple, optional): The axes of the RVs Y_1,...,Y_N. Defaults to (-1,).
 
     Returns:
-        float: Mutual information
+        float: The value I(X_1,...,X_M;Y_1,...,Y_N).
     """
 
     # H(X_1,...,X_M) - H(X_1,...,X_M|Y_1,...,Y_N)
     return entropy(np.sum(joint_pmf, axis=Y_axes)) - conditional_entropy(joint_pmf, Y_axes)
 
 
-def generate_pmf(data, labels=None, axes=None) -> np.ndarray:
+def generate_pmf(data, labels=None) -> np.ndarray:
     """Computes the pmf of the features (columns) of 'data', which must be uniquely labelled (For example by
-    applying the 'label_data' function).
+    applying the 'label_data' function) with zero-based consecutive integers.
 
     Args:
-        data (_type_): _description_
-        labels (_type_, optional): _description_. Defaults to None.
-        axes (_type_, optional): _description_. Defaults to None.
+        data (Any): A 2-dimensional array where each column contains consecutive integers. 
+        labels (Any, optional): For each column, the mapping from the integer labels to the actual values.
+        Defaults to None.
 
     Returns:
-        _type_: _description_
+        np.ndarray: A numpy array with N-dimensions (Where N is the number of features), with each entry being
+        the joint pmf of the particular labels appearing simultaneously. 
     """
 
     assert np.ndim(data) == 2, "data must be a two dimensional numpy array"
@@ -73,20 +74,16 @@ def generate_pmf(data, labels=None, axes=None) -> np.ndarray:
 
     rows, cols = np.shape(data)
 
-    # By default, calculate joint pmf for all features
-    if axes is None:
-        axes = tuple(range(cols))
-
     # Stores the number of unique values for each feature (column)
     bins = None
     # If no labels are specified, calculate them
     if labels is None:
-        bins = tuple(len(set(column)) for column in data[:, axes].T)
+        bins = tuple(len(np.unique(column)) for column in data.T)
     else:
-        assert len(labels) == len(axes), "Size of bin counts tuple must equal number of axes"
+        assert len(labels) == cols, "Size of bin counts tuple must equal number of features"
         bins = tuple(len(label) for label in labels)
 
     pmf = np.zeros(shape=bins)
-    np.add.at(pmf, tuple(data[:, axes].T), 1./rows)
+    np.add.at(pmf, tuple(data.T), 1./rows)
 
     return pmf
