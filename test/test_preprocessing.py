@@ -17,6 +17,8 @@ def _random_dataset(request):
 
 
 def test_relabel(_random_dataset):
+    """Test labelling the data and then acquiring the original data from the labelled"""
+
     data, labelled_data, labels = _random_dataset
     rows, cols = np.shape(_random_dataset[0])
 
