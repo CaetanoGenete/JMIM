@@ -39,7 +39,7 @@ def test_relabel_unique(_random_choice_dataset):
     assert np.alltrue(relabelled_data == _random_choice_dataset)
 
 
-def _test_label_efd_feature(feature, labelled_feature, label, bins):
+def _test_label_efd_feature(feature, labelled_feature: np.ndarray, label, bins: int):
     """Helper function, pulls out common functionality in np.ndarray and pd.DataFrama test variants"""
 
     counts = np.bincount(labelled_feature)
@@ -61,7 +61,7 @@ def test_label_efd(_random_dataset):
         _test_label_efd_feature(*triplet, bins)
 
 
-def _test_label_ewd_feature(feature, labelled_feature, label, bins):
+def _test_label_ewd_feature(feature, labelled_feature: np.ndarray, label, bins: int):
     assert len(np.unique(labelled_feature)) == bins
 
     nplabel = np.array(label)
@@ -71,7 +71,7 @@ def _test_label_ewd_feature(feature, labelled_feature, label, bins):
     assert np.allclose(widths[0], widths, 1e-8)
 
     assert np.alltrue(nplabel[labelled_feature, 0] <= feature) and\
-            np.alltrue(feature <= nplabel[labelled_feature, 1])
+           np.alltrue(feature <= nplabel[labelled_feature, 1])
 
 
 def test_label_ewd(_random_dataset):

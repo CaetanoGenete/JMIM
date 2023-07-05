@@ -25,14 +25,14 @@ def _random_dataset(request):
     return pmf, data
 
 
-def _reduce_joint_pmf(joint_pmf, axes):
+def _reduce_joint_pmf(joint_pmf: np.ndarray, axes: tuple) -> np.ndarray:
     """Computes the joint pmf for a smaller subset of features (axes). Features are relabelled to be
     consecutive whilst preserving their order"""
 
     return np.sum(joint_pmf, axis=_invert_axes(axes, joint_pmf.ndim))
 
 
-def _JMIM_2(joint_pmf, k):
+def _JMIM_2(joint_pmf: np.ndarray, k: int) -> list:
     """For testing purposes. Identical computation to JMIM.JMIM.JMIM"""
 
     assert k < joint_pmf.ndim, "Selecting too many features!"
@@ -51,7 +51,7 @@ def _JMIM_2(joint_pmf, k):
     return S
 
 
-def _JMIM_3(joint_pmf, k):
+def _JMIM_3(joint_pmf: np.ndarray, k: int) -> list:
     """For testing purposes. Identical computation to JMIM.JMIM.JMIM"""
 
     # Omit last feature since this is C
@@ -81,7 +81,7 @@ def test_JMIM_1(_random_dataset, k_frac):
 
     pmf, data = _random_dataset
 
-    ndim = np.ndim(data)
+    ndim = np.ndim(pmf)
     k = min(max(1, int(k_frac * ndim)), ndim-1)
 
     result1 = JMIM(data, k)
@@ -97,7 +97,7 @@ def test_JMIM_2(_random_dataset, k_frac):
 
     pmf, data = _random_dataset
 
-    ndim = np.ndim(data)
+    ndim = np.ndim(pmf)
     k = min(max(1, int(k_frac * ndim)), ndim-1)
 
     result1 = JMIM(data, k)

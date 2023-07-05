@@ -32,7 +32,7 @@ def _random_pmf(_random_dataset):
     return pmf, Y_axes
 
 
-def _conditional_entropy_2(joint_pmf, Y_axes=(-1,)):
+def _conditional_entropy_2(joint_pmf: np.ndarray, Y_axes=(-1,)) -> float:
     """For testing purposes. Identical computation to JMIM.entropy.conditional_entropy"""
 
     ndim = np.ndim(joint_pmf)
@@ -58,7 +58,7 @@ def test_entropy_compare(_random_pmf):
     assert np.abs(e1 - e2) < 1e-8
 
 
-def _MI_2(joint_pmf, Y_axes=(-1,)):
+def _MI_2(joint_pmf: np.ndarray, Y_axes=(-1,)) -> float:
     """For testing purposes. Identical computation to JMIM.entropy.MI"""
 
     ndim = np.ndim(joint_pmf)

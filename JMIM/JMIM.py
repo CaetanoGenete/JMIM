@@ -42,23 +42,50 @@ def JMIM(data, k: int, labels=None, C=-1, normalised=False) -> list:
     """
 
     data, labels, F, S = _prep_data(data, k, labels, C)
-
     # NJMIM is identical to JMIM, but using SR instead of MI as the metric
     metric = _JMIM_metric(data, labels, SR if normalised else MI)
 
     # Select the f_i with the greatest metric
-    max_index = np.argmax([metric((fi, C)) for fi in F])
-    S.append(F.pop(max_index))
+    min_metrics = np.array([metric((fi, C)) for fi in F])
+    S.append(F.pop(np.argmax(min_metrics)))
     
-    min_metrics = [np.inf] * len(F)
+    #Unfortunately, I(f_i, f_j;C) >= I(f_i; C), must reset.
+    min_metrics[:] = np.inf
     # Every iteration, S grows by 1. Stop when |S|=k.
     for _ in range(1, k):
-        # Recompute min_metrics now that there is a new feature in S
-        for i, min_val in enumerate(min_metrics):
-            min_metrics[i] = min(min_val, metric((F[i], S[-1], C)))
+        for f in F:
+            min_metrics[f] = min(min_metrics[f], metric((f, S[-1], C)))
+        
+        S.append(F.pop(np.argmax(min_metrics[F])))
 
-        max_index = np.argmax(min_metrics)
-        S.append(F.pop(max_index))
-        min_metrics.pop(max_index)
+    return S
+
+
+def MIFS(data, k: int, labels=None, C=-1) -> list:
+    """Selects the k most significant features, based on the MIFS algorithm.
+
+    Args:
+        data (Any): A two dimensional array of data where the columns represent the features.
+        k (int): The number of features to select.
+        labels (Any, optional): The mapping from the integer labels in data to their true value. Defaults to None.
+        C (int, optional): The output feature. Defaults to -1.
+
+    Returns:
+        list: The k most significant features in order of significance.
+    """
+
+    data, labels, F, S = _prep_data(data, k, labels, C)
+    metric = _JMIM_metric(data, labels, MI)
+
+    # Select the f_i with the greatest metric
+    min_metrics = np.array([metric((fi, C)) for fi in F])
+    S.append(F.pop(np.argmax(min_metrics)))
+    
+    # Every iteration, S grows by 1. Stop when |S|=k.
+    for _ in range(1, k):
+        for f in F:
+            min_metrics[f] - metric((f, S[-1], C))
+        
+        S.append(F.pop(np.argmax(min_metrics[F])))
 
     return S
