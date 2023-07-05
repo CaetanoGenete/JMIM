@@ -3,11 +3,11 @@ from numba import njit
 
 
 @njit
-def entropy(pmf) -> float:
+def entropy(pmf: np.ndarray) -> float:
     """Calculates the entropy of a random variable X: H(X).
 
     Args:
-        pmf (np.array): The pmf of all the realisations of X
+        pmf (np.ndarray): The pmf of all the realisations of X
 
     Returns:
         float: The entropy of the the random variable X
@@ -18,18 +18,18 @@ def entropy(pmf) -> float:
     return -np.sum(flat_pmf[flat_pmf > 0] * np.log2(flat_pmf[flat_pmf > 0]))
 
 
-def _invert_axes(axes, ndim) -> tuple:
-    """Computes the set minus operation (0,...,ndim-1)\axes"""
+def _invert_axes(axes: tuple, ndim: int) -> tuple:
+    """Computes the set minus operation (0,...,ndim-1)-axes"""
 
     # Mod ensures axes are in the interval [0, ndim) (Also allows for negative indices).
     return tuple(np.setdiff1d(np.arange(ndim), np.mod(axes, ndim)))
 
 
-def conditional_entropy(joint_pmf, Y_axes=(-1,)) -> float:
+def conditional_entropy(joint_pmf: np.ndarray, Y_axes=(-1,)) -> float:
     """Compute the conditional entropy H(X_1,...,X_M|Y_1,...,Y_N), using the joint pmf of X_1,...,X_M,Y_1,...,Y_N.
 
     Args:
-        joint_pmf (np.array): Joint pmf of the RVs X_1,...,X_M,Y_1,...,Y_N (Each axis is a difference RV).
+        joint_pmf (np.ndarray): Joint pmf of the RVs X_1,...,X_M,Y_1,...,Y_N (Each axis is a difference RV).
         Y_axes (tuple, optional): The axes of the RVs Y_1,...,Y_N. Defaults to (-1,).
 
     Returns:
@@ -41,12 +41,12 @@ def conditional_entropy(joint_pmf, Y_axes=(-1,)) -> float:
     return entropy(joint_pmf) - entropy(np.sum(joint_pmf, axis=X_axes))
 
 
-def MI(joint_pmf, Y_axes=(-1,)) -> float:
+def MI(joint_pmf: np.ndarray, Y_axes=(-1,)) -> float:
     """Compute the mutual information metric I(X_1,...,X_M;Y_1,...,Y_N), using the joint pmf of
     X_1,...,X_M,Y_1,...,Y_N.
 
     Args:
-        joint_pmf (np.array): Joint pmf of the RVs X_1,...,X_M,Y_1,...,Y_N (Each axis is a difference RV).
+        joint_pmf (np.ndarray): Joint pmf of the RVs X_1,...,X_M,Y_1,...,Y_N (Each axis is a difference RV).
         Y_axes (tuple, optional): The axes of the RVs Y_1,...,Y_N. Defaults to (-1,).
 
     Returns:
@@ -55,6 +55,23 @@ def MI(joint_pmf, Y_axes=(-1,)) -> float:
 
     # H(X_1,...,X_M) - H(X_1,...,X_M|Y_1,...,Y_N)
     return entropy(np.sum(joint_pmf, axis=Y_axes)) - conditional_entropy(joint_pmf, Y_axes)
+
+
+def SR(joint_pmf: np.ndarray, Y_axes=(-1,)):
+    """Compute the symmetrical relevance metric SR(X_1,...,X_M;Y_1,...,Y_N), using the joint pmf of
+    X_1,...,X_M,Y_1,...,Y_N.
+
+    Args:
+        joint_pmf (np.ndarray): Joint pmf of the RVs X_1,...,X_M,Y_1,...,Y_N (Each axis is a difference RV).
+        Y_axes (tuple, optional): The axes of the RVs Y_1,...,Y_N. Defaults to (-1,).
+
+    Returns:
+        float: The value I(X_1,...,X_M;Y_1,...,Y_N).
+    """
+
+    mi = MI(joint_pmf, Y_axes)
+    # If H(X_1,...,X_M,Y_1,...,Y_N) is zero, then so is I(X_1,...,X_M;Y_1,...,Y_N). In this case, define SR = 0.
+    return 0. if mi == 0 else (mi / entropy(joint_pmf))
 
 
 def generate_pmf(data: np.ndarray, labels=None) -> np.ndarray:

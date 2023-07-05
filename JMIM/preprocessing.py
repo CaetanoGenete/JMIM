@@ -4,7 +4,7 @@ from functools import singledispatch
 def _unique_labelling(data, _) -> tuple:
     """Assign a unique integer label to every value in data"""
 
-    #Using set here to allow for non-numeric types
+    # Using set here to allow for non-numeric types
     value_to_label = {value:j for j, value in enumerate(set(data))}
     
     labelled_data = np.vectorize(lambda x: value_to_label[x])(data)
@@ -87,7 +87,7 @@ def label_data(data, method="unique", bins=None) -> tuple:
     for i, feature in enumerate(_label_data_iter(data)):
         method_i = _index_maybe_scalar(method, i).lower()
         bins_i = _index_maybe_scalar(bins, i)
-        
+
         assert method in _label_data_method_map.keys(), "Unknown method!"
 
         labelled_data[:, i], label = _label_data_method_map[method_i](feature, bins_i)
