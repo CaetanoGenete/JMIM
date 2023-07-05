@@ -11,7 +11,7 @@ def _JMI(data, labels, features: tuple) -> float:
 
 
 def JMIM(data, k: int, labels=None, C=-1) -> list:
-    """Selects the k most significant features, based on the JMIM algorithm.
+    """Selects the k most significant features, based on the JMIM algorithm. 
 
     Args:
         data (Any): A two dimensional array of data where the columns represent the features.
@@ -24,13 +24,14 @@ def JMIM(data, k: int, labels=None, C=-1) -> list:
     """
 
     _, nfeatures = np.shape(data)
-    assert k < nfeatures, "k cannot be greater or equal to the number of features"
+
+    assert k < nfeatures, "k must be less than the number of features"
 
     # If no labels are specified, assign labels to data
     if(labels is None):
         data, labels = label_data(data)
     else:
-        assert nfeatures == len(labels), "Number of label sets doesn't match number of features"
+        assert len(labels) == nfeatures, "Number of label sets doesn't match number of features"
 
     # F initially contains every feature (except C)
     F = list(_invert_axes((C,), nfeatures))

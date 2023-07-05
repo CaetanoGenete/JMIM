@@ -7,5 +7,4 @@ setup(
    author='Caetano Visan-Genete',
    author_email='caetanogenete@gmaik.com',
    packages=['JMIM'],
-   install_requires=['numpy']
-)
+   install_requires=['numpy'])

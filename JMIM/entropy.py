@@ -21,7 +21,7 @@ def entropy(pmf) -> float:
 def _invert_axes(axes, ndim) -> tuple:
     """Computes the set minus operation (0,...,ndim-1)\axes"""
 
-    #Mod ensures axes are in the interval [0, ndim) (Also allows for negative indices).
+    # Mod ensures axes are in the interval [0, ndim) (Also allows for negative indices).
     return tuple(np.setdiff1d(np.arange(ndim), np.mod(axes, ndim)))
 
 
@@ -57,12 +57,12 @@ def MI(joint_pmf, Y_axes=(-1,)) -> float:
     return entropy(np.sum(joint_pmf, axis=Y_axes)) - conditional_entropy(joint_pmf, Y_axes)
 
 
-def generate_pmf(data, labels=None) -> np.ndarray:
+def generate_pmf(data: np.ndarray, labels=None) -> np.ndarray:
     """Computes the pmf of the features (columns) of 'data', which must be uniquely labelled (For example by
-    applying the 'label_data' function) with zero-based consecutive integers.
+    applying the 'JMI.preprocessing.label_data' function) with zero-based consecutive integers.
 
     Args:
-        data (Any): A 2-dimensional array where each column contains consecutive integers. 
+        data (np.ndarray): A 2-dimensional array where each column contains consecutive integers. 
         labels (Any, optional): For each column, the mapping from the integer labels to the actual values.
         Defaults to None.
 
@@ -72,7 +72,8 @@ def generate_pmf(data, labels=None) -> np.ndarray:
     """
 
     assert np.ndim(data) == 2, "data must be a two dimensional numpy array"
-    assert np.issubdtype(data.dtype, np.integer), "data must be a list of integral types, use label_data to convert"
+    assert np.issubdtype(data.dtype, np.integer), "data must be a list of integral types, use"\
+                                                  "JMIM.preprocessing.label_data to label"
 
     rows, cols = np.shape(data)
 
@@ -82,7 +83,7 @@ def generate_pmf(data, labels=None) -> np.ndarray:
     if labels is None:
         bins = tuple(len(np.unique(column)) for column in data.T)
     else:
-        assert len(labels) == cols, "Size of bin counts tuple must equal number of features"
+        assert len(labels) == cols, "Number of labels must equal number of features"
         bins = tuple(len(label) for label in labels)
 
     pmf = np.zeros(shape=bins)
