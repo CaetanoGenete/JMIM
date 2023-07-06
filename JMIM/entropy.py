@@ -22,7 +22,13 @@ def _invert_axes(axes: tuple, ndim: int) -> tuple:
     """Computes the set minus operation (0,...,ndim-1)-axes"""
 
     # Mod ensures axes are in the interval [0, ndim) (Also allows for negative indices).
-    return tuple(np.setdiff1d(np.arange(ndim), np.mod(axes, ndim)))
+    return tuple(np.setdiff1d(np.arange(ndim), np.mod(axes, ndim), assume_unique=True))
+
+
+def _conditional_entropy_X(joint_pmf: np.ndarray, X_axes: tuple) -> float:
+    """Conditional entropy given the axes of joint_pmf representing the X_1,...,X_N variables"""
+
+    return entropy(joint_pmf) - entropy(np.sum(joint_pmf, axis=X_axes))
 
 
 def conditional_entropy(joint_pmf: np.ndarray, Y_axes=(-1,)) -> float:
@@ -38,7 +44,7 @@ def conditional_entropy(joint_pmf: np.ndarray, Y_axes=(-1,)) -> float:
 
     X_axes = _invert_axes(Y_axes, np.ndim(joint_pmf))
     # H(X_1,...,X_M,Y_1,...,Y_N) - H(Y_1,...,Y_N)
-    return entropy(joint_pmf) - entropy(np.sum(joint_pmf, axis=X_axes))
+    return _conditional_entropy_X(joint_pmf, X_axes)
 
 
 def MI(joint_pmf: np.ndarray, Y_axes=(-1,)) -> float:
@@ -72,6 +78,25 @@ def SR(joint_pmf: np.ndarray, Y_axes=(-1,)):
     mi = MI(joint_pmf, Y_axes)
     # If H(X_1,...,X_M,Y_1,...,Y_N) is zero, then so is I(X_1,...,X_M;Y_1,...,Y_N). In this case, define SR = 0.
     return 0. if mi == 0 else (mi / entropy(joint_pmf))
+
+
+def CMI(joint_pmf: np.ndarray, X_axes: tuple, Y_axes: tuple) -> float:
+    """Compute the conditional mutual information metric I(X_1,...,X_M;Y_1,...,Y_N|Z_1,...,Z_L), using the joint pmf of
+    X_1,...,X_M,Y_1,...,Y_N,Z_1,...,Z_L.
+
+    Args:
+        joint_pmf (np.ndarray): Joint pmf of the RVs X_1,...,X_M,Y_1,...,Y_N (Each axis is a difference RV).
+        X_axes (tuple): The axes of the RVs X_1,...,X_M.
+        Y_axes (tuple): The axes of the RVs Y_1,...,Y_N.
+
+    Returns:
+        float: The value I(X_1,...,X_M;Y_1,...,Y_N|Z_1,...,Z_L).
+    """
+
+    # H(X_1,...,X_M,Z_1,...,Z_L) - H(Z_1,..., Z_L) - H(X_1,...,X_M|Y_1,...,Y_N,Z_1,...,Z_L)
+    return entropy(np.sum(joint_pmf, Y_axes)) -\
+           entropy(np.sum(joint_pmf, X_axes + Y_axes)) -\
+           _conditional_entropy_X(joint_pmf, X_axes)
 
 
 def generate_pmf(data: np.ndarray, labels=None) -> np.ndarray:

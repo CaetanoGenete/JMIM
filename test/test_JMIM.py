@@ -15,14 +15,14 @@ def _random_dataset(request):
     rows = np.random.randint(10_000, 50_000)
 
     data = np.random.randint(0, 10, size=(rows, nfeatures))
-    labelled_data, labels = label_data(data)
+    labelled_pair = label_data(data)
 
-    pmf = generate_pmf(labelled_data, labels)
+    pmf = generate_pmf(*labelled_pair)
 
     assert np.abs(np.sum(pmf) - 1.) < 1e-10, "pmf must sum to 1!"
     assert np.alltrue(pmf >= 0), "all values of pmf must be non-negative!"
 
-    return pmf, data
+    return pmf, *labelled_pair
 
 
 def _reduce_joint_pmf(joint_pmf: np.ndarray, axes: tuple) -> np.ndarray:
@@ -79,12 +79,12 @@ def _JMIM_3(joint_pmf: np.ndarray, k: int) -> list:
 def test_JMIM_1(_random_dataset, k_frac):
     """Compare results of _JMIM_2 implementation with JMIM"""
 
-    pmf, data = _random_dataset
+    pmf, *labelled_pair = _random_dataset
 
     ndim = np.ndim(pmf)
     k = min(max(1, int(k_frac * ndim)), ndim-1)
 
-    result1 = JMIM(data, k)
+    result1 = JMIM(*labelled_pair, k)
     result2 = _JMIM_2(pmf, k)
 
     assert result1 == result2
@@ -95,12 +95,12 @@ def test_JMIM_1(_random_dataset, k_frac):
 def test_JMIM_2(_random_dataset, k_frac):
     """Compare results of _JMIM_3 implementation with JMIM"""
 
-    pmf, data = _random_dataset
+    pmf, *labelled_pair = _random_dataset
 
     ndim = np.ndim(pmf)
     k = min(max(1, int(k_frac * ndim)), ndim-1)
 
-    result1 = JMIM(data, k)
+    result1 = JMIM(*labelled_pair, k)
     result2 = _JMIM_3(pmf, k)
 
     assert result1 == result2

@@ -5,7 +5,7 @@ from JMIM.entropy import *
 from JMIM.entropy import _invert_axes
 from JMIM.preprocessing import label_data
 
-from JMIM.JMIM import _JMIM_metric
+from JMIM.JMIM import _bind_data
 
 @pytest.fixture(scope="module", params=list(range(6)))
 def _random_dataset(request):
@@ -35,14 +35,11 @@ def _random_pmf(_random_dataset):
 def _conditional_entropy_2(joint_pmf: np.ndarray, Y_axes=(-1,)) -> float:
     """For testing purposes. Identical computation to JMIM.entropy.conditional_entropy"""
 
-    ndim = np.ndim(joint_pmf)
-
     #Ensure axes are in the interval [0, ndim) (Also allows for negative indices).
-    Y_axes = np.mod(Y_axes, ndim)
-    X_axes = _invert_axes(Y_axes, ndim)
+    X_axes = _invert_axes(Y_axes, np.ndim(joint_pmf))
 
-    # expand_dims for correct broadcasting with joint_pmf
-    Y_pmf = np.expand_dims(np.sum(joint_pmf, axis=X_axes), X_axes)
+    # keepdims=True for correct broadcasting with pmf
+    Y_pmf = np.sum(joint_pmf, axis=X_axes, keepdims=True)
     # (May throw divide by zero warning)
     return -np.sum(joint_pmf[joint_pmf > 0] * np.log2((joint_pmf / Y_pmf)[joint_pmf > 0]))
 
@@ -61,15 +58,12 @@ def test_entropy_compare(_random_pmf):
 def _MI_2(joint_pmf: np.ndarray, Y_axes=(-1,)) -> float:
     """For testing purposes. Identical computation to JMIM.entropy.MI"""
 
-    ndim = np.ndim(joint_pmf)
-
     #Ensure axes are in the interval [0, ndim) (Also allows for negative indices).
-    Y_axes = tuple(np.mod(Y_axes, ndim))
-    X_axes = _invert_axes(Y_axes, ndim)
+    X_axes = _invert_axes(Y_axes, ndim = np.ndim(joint_pmf))
 
-    #expand_dims for correct broadcasting with joint_pmf
-    X_pmf = np.expand_dims(np.sum(joint_pmf, axis=Y_axes), Y_axes)
-    Y_pmf = np.expand_dims(np.sum(joint_pmf, axis=X_axes), X_axes)
+    # keepdims=True for correct broadcasting with pmf
+    X_pmf = np.sum(joint_pmf, axis=Y_axes, keepdims=True)
+    Y_pmf = np.sum(joint_pmf, axis=X_axes, keepdims=True)
     return np.sum(joint_pmf[joint_pmf > 0] * np.log2((joint_pmf / (X_pmf * Y_pmf))[joint_pmf > 0]))
 
 
@@ -163,7 +157,7 @@ def test_joint_MI_ineq(_random_dataset):
     data, labels = _random_dataset
     _, nfeatures = np.shape(data)
 
-    JMI = _JMIM_metric(data, labels, MI)
+    JMI = _bind_data(data, labels, MI)
 
     for i in range(nfeatures-1):
         for j in range(i+1):
