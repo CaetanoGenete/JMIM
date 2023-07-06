@@ -14,6 +14,8 @@ def _unique_labelling(data, _) -> tuple:
 
 
 def _digitise_split_bins(data, bins: np.ndarray) -> tuple:
+    """Label data according intervals in bins, return labels as list of interval pairs"""
+
     # Ensure all values on the number line are covered by the bins
     bins[0] = -np.inf
     bins[-1] = np.inf

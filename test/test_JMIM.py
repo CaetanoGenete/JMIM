@@ -4,7 +4,7 @@ import pytest
 from JMIM.entropy import *
 from JMIM.entropy import _invert_axes
 from JMIM.preprocessing import label_data
-from JMIM.JMIM import JMIM
+from JMIM.feature_selection import JMIM
 
 
 @pytest.fixture(scope="module", params=list(range(6)))

@@ -11,7 +11,7 @@ def _bind_data(data: np.ndarray, labels, metric: Callable[[np.ndarray, tuple], f
     return lambda features: metric(generate_pmf(data[:, features], [labels[i] for i in features]))
 
 
-def _greedy_search(data: np.ndarray, k: int, setup: Callable[[list], int], criterion: Callable[[list, int], float], C=-1):
+def _greedy_search(data: np.ndarray, k: int, setup: Callable[[list], int], criterion: Callable[[int, int], float], C=-1):
     """Greedy search selection function, at every step pick the feature with the GREATEST criterion"""
 
     F = list(_invert_axes((C,), np.shape(data)[1]))
@@ -34,7 +34,7 @@ def _greedy_search(data: np.ndarray, k: int, setup: Callable[[list], int], crite
 
 
 def _MIM_common(data: np.ndarray, labels, k: int, C: int, criterion: Callable[[tuple], float]) -> list:
-    """Common functionality between (x)MIM algorithms. IMPORTANT criterion accepts (f_i, f_s, C)"""
+    """Common functionality between (x)MIM algorithms. IMPORTANT criterion args are (f_i, f_s, C)"""
     
     MI_metric = _bind_data(data, labels, MI)
     min_metric = np.empty(np.shape(data)[1])
@@ -69,6 +69,26 @@ def JMIM(data: np.ndarray, labels, k: int, C=-1, normalised=False) -> list:
     """
 
     return _MIM_common(data, labels, k, C, _bind_data(data, labels, SR if normalised else MI))
+
+
+def CMIM(data: np.ndarray, labels, k: int, C=-1) -> list:
+    """Selects the k most significant features, based on the CMIM algorithm.
+
+    Args:
+        data (np.ndarray): A two dimensional array of data where the columns represent the features.
+        k (int): The number of features to select.
+        labels (Any): The mapping from the integer labels in data to their true value. Defaults to None.
+        C (int, optional): The output feature. Defaults to -1.
+
+    Returns:
+        list: The k most significant features in order of significance.
+    """
+
+    def _criterion(features: tuple) -> float:
+        assert len(features) == 3
+        return CMI(generate_pmf(data[:, features], [labels[i] for i in features]), (0,), (2,))
+
+    return _MIM_common(data, labels, k, C, _criterion)
 
 
 def MIFS(data: np.ndarray, labels, k: int, beta: float, C=-1) -> list:
@@ -168,22 +188,3 @@ def MRMR(data, labels, k: int, C=-1) -> list:
         return u[f]-z[f]/step
 
     return _greedy_search(data, k, _setup, _criterion, C)
-
-
-def CMIM(data: np.ndarray, labels, k: int, C=-1) -> list:
-    """Selects the k most significant features, based on the CMIM algorithm.
-
-    Args:
-        data (np.ndarray): A two dimensional array of data where the columns represent the features.
-        k (int): The number of features to select.
-        labels (Any): The mapping from the integer labels in data to their true value. Defaults to None.
-        C (int, optional): The output feature. Defaults to -1.
-
-    Returns:
-        list: The k most significant features in order of significance.
-    """
-
-    def _criterion(features: tuple) -> float:
-        return CMI(generate_pmf(data[:, features], [labels[i] for i in features]), (0,), (2,))
-
-    return _MIM_common(data, labels, k, C, _criterion)
